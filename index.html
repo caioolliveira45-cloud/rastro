@@ -435,11 +435,12 @@ function render(){
   const n=list.length,f=list.filter(x=>x.done).length;
   document.getElementById('pb').style.width=(n?f/n*100:0)+'%';
   document.getElementById('pt').textContent=f+' de '+n+' paradas feitas'+(n&&f===n?' 🎉':'');
-  const nx=list.find(x=>!x.done);let h='<div class="end"><span>🏁 Fim do dia</span></div>';
+  // trilha de cima (início do dia) para baixo (fim do dia)
+  const nx=list.find(x=>!x.done);let h='<div class="end"><span>🏠 Saída</span></div>';
   if(!n)h+='<div class="empty">Nenhuma parada. Toque em + para adicionar.</div>';
-  [...list].reverse().forEach((s,ri)=>{const i=n-1-ri,c=catColor(s.k);
+  list.forEach((s,i)=>{const c=catColor(s.k);
   h+=`<div class="stop ${i%2?'r':''} ${s.done?'done':''} ${s===nx?'next':''}" data-i="${i}"><div class="dot" style="background:${c}">${s.done?'✓':i+1}</div><div class="card" style="border-left-color:${c}"><div class="t">${s.h} · ${esc(catNome(s.k))}</div><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p><button class="ed" data-e="${i}" type="button">✏️</button></div></div>`});
-  h+='<div class="end" style="margin:0"><span>🏠 Saída</span></div>';
+  h+='<div class="end" style="margin:0"><span>🏁 Fim do dia</span></div>';
   m.innerHTML=h;renderLegend();requestAnimationFrame(trail);
 }
 function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
@@ -555,6 +556,10 @@ document.getElementById('catAddFromManage').onclick=()=>{closeManage();editingCa
 const sh=n=>{const d=new Date(day+'T12:00');d.setDate(d.getDate()+n);day=iso(d);render();scrollTo(0,0)};
 document.getElementById('prev').onclick=()=>sh(-1);document.getElementById('nxt').onclick=()=>sh(1);addEventListener('resize',trail);
 render();
+// ao abrir: fica no topo, ou rola até a próxima parada pendente se ela estiver fora da tela
+requestAnimationFrame(()=>{const nx=m.querySelector('.stop.next');if(!nx||!m.querySelector('.stop.done'))return;
+  const hd=document.querySelector('header').offsetHeight,r=nx.getBoundingClientRect();
+  if(r.bottom>innerHeight-110)scrollTo({top:Math.max(0,scrollY+r.top-hd-24),behavior:'smooth'})});
 
 /* —— Voz: microfone, transcrição e revisão —— */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
